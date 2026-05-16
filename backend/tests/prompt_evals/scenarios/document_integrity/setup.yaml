@@ -1,0 +1,22 @@
+property_context:
+  property_id: "33333333-3333-3333-3333-333333333333"
+  property:
+    id: "33333333-3333-3333-3333-333333333333"
+    address: "21 Rue Ordener, 75018 Paris"
+    type: "apartment"
+  lease:
+    id: "lease-c"
+    property_id: "33333333-3333-3333-3333-333333333333"
+  tenant:
+    name: "Omar Tenant"
+  landlord:
+    name: "Lea Landlord"
+  preferred_providers: []
+  agent_context: {}
+  conversations: []
+  active_plans: []
+  recent_actions: []
+relational_facts:
+  rent_amount: "980.00"
+  payment_id: "payment-3"
+payment_confirmed: false

@@ -1,0 +1,5 @@
+turns:
+  - sender_role: tenant
+    channel: whatsapp
+    thread_id: eval-responsibility
+    body: "The sink is leaking. Can I choose the plumber myself?"

@@ -1,5 +1,14 @@
 # Technical Stack
 
+This early note is superseded by the structured documentation set:
+
+- [Overview](01-overview.md)
+- [Architecture](02-architecture.md)
+- [Data Model](05-data-model.md)
+- [Local Development](09-local-development.md)
+
+The original notes remain below for historical context.
+
 ## Overview
 
 This project is a cloud-native platform for an autonomous real estate agent. The system coordinates conversations and workflows between tenants, property owners, service providers, and internal supervisors.
@@ -18,8 +27,7 @@ The backend is stateless by design. No application instance keeps critical state
 | Agent Context | PostgreSQL JSONB | Agent memory, conversations, cases, plans, workflow state |
 | ACID Data | PostgreSQL | Users, properties, leases, payments, providers, permissions |
 | Web Search | Tavily | Real-time web search and external information retrieval |
-| Voice | Gradium | Speech-to-text and text-to-speech interactions |
-| Voice Infrastructure | SLNG | Hosting and execution layer for voice models |
+| Voice | SLNG | Speech-to-text and text-to-speech interactions using SLNG's own models |
 | Communication | WhatsApp / Email | Tenant, owner, and service provider communication |
 
 ## FastAPI Backend
@@ -33,7 +41,7 @@ Its main responsibilities are:
 - Load relational business data from PostgreSQL.
 - Load agent context and workflow state from PostgreSQL JSONB.
 - Invoke the OpenAI-powered agent with the appropriate context and constraints.
-- Trigger external tools such as Tavily, WhatsApp, email, Gradium, and provider integrations.
+- Trigger external tools such as Tavily, WhatsApp, email, SLNG voice, and provider integrations.
 - Persist messages, decisions, tool traces, case updates, and workflow changes.
 - Expose API endpoints consumed by the React dashboard.
 
@@ -169,8 +177,7 @@ The platform integrates with multiple external services:
 - WhatsApp for tenant and owner communication.
 - Email for service provider communication.
 - Tavily for real-time web search.
-- Gradium for speech-to-text and text-to-speech features.
-- SLNG for voice model infrastructure.
+- SLNG for speech-to-text and text-to-speech voice features.
 - OpenAI API for agent reasoning and response generation.
 
 External calls should be traced and persisted so the system can provide auditability, debugging context, and dashboard visibility.

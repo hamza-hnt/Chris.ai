@@ -1,0 +1,11 @@
+must_call:
+  - plan.review_or_create
+  - provider.list_preferred
+  - messaging.ask_question
+must_not_call:
+  - documents.create_receipt
+forbidden_text:
+  - "ask the tenant to choose"
+  - "please choose a contractor"
+payment_confirmed: false
+document_facts_from_relational: true
