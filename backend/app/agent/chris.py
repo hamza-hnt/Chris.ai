@@ -286,6 +286,7 @@ class ChrisAgent:
                     _reply_role(current_turn["sender_role"]),
                     content,
                 )
+        self._ensure_landlord_contact_when_needed(result, tool_context, property_context, current_turn)
         if not result.final_message:
             result.final_message = "Turn completed through OpenAI Agents SDK runtime."
         return result
@@ -355,6 +356,30 @@ class ChrisAgent:
             )
         return tools
 
+    def _ensure_landlord_contact_when_needed(
+        self,
+        result: AgentTurnResult,
+        context: ToolExecutionContext,
+        property_context: dict[str, Any],
+        current_turn: dict[str, Any],
+    ) -> None:
+        if not _should_force_landlord_contact(result, current_turn):
+            return
+
+        body = _landlord_repair_approval_question(property_context, current_turn)
+        output = self._call_tool(
+            result,
+            context,
+            "messaging.ask_question",
+            {"to_role": "landlord", "body": body},
+        )
+        self._record_outgoing_from_tool(
+            result,
+            "messaging.ask_question",
+            {"to_role": "landlord", "body": body},
+            output,
+        )
+
 
 def _contains_injection(body: str) -> bool:
     triggers = ["ignore previous", "ignore all previous", "act as admin", "system prompt", "bypass"]
@@ -373,6 +398,79 @@ def _infer_trade(body: str) -> str:
     if "heat" in body or "boiler" in body:
         return "heating"
     return "general maintenance"
+
+
+def _should_force_landlord_contact(
+    result: AgentTurnResult,
+    current_turn: dict[str, Any],
+) -> bool:
+    if current_turn.get("sender_role") != "tenant":
+        return False
+    if _has_outgoing_role(result, "landlord"):
+        return False
+    if _asked_tenant_question(result):
+        return False
+    return _is_repair_request(current_turn.get("body", ""))
+
+
+def _has_outgoing_role(result: AgentTurnResult, role: str) -> bool:
+    return any(message.get("to_role") == role for message in result.outgoing_messages)
+
+
+def _asked_tenant_question(result: AgentTurnResult) -> bool:
+    return any(
+        call.get("name") == "messaging.ask_question"
+        and call.get("arguments", {}).get("to_role") == "tenant"
+        for call in result.tool_calls
+    )
+
+
+def _is_repair_request(body: str) -> bool:
+    normalized = body.lower()
+    repair_terms = [
+        "boiler",
+        "broken",
+        "chauffage",
+        "chaudiere",
+        "degat",
+        "electric",
+        "eau",
+        "evier",
+        "fuite",
+        "fuit",
+        "heating",
+        "lavabo",
+        "leak",
+        "lock",
+        "locksmith",
+        "panne",
+        "parquet",
+        "plomb",
+        "plumb",
+        "porte",
+        "radiateur",
+        "repair",
+        "serrure",
+        "sink",
+        "siphon",
+        "water",
+    ]
+    return any(term in normalized for term in repair_terms)
+
+
+def _landlord_repair_approval_question(
+    property_context: dict[str, Any],
+    current_turn: dict[str, Any],
+) -> str:
+    tenant_name = property_context.get("tenant", {}).get("name") or "Le locataire"
+    landlord_name = property_context.get("landlord", {}).get("name") or ""
+    address = property_context.get("property", {}).get("address") or "le logement"
+    message = " ".join(str(current_turn.get("body", "")).strip().split())
+    greeting = f"Bonjour {landlord_name}, " if landlord_name else "Bonjour, "
+    return (
+        f"{greeting}{tenant_name} signale une demande de reparation a {address}: "
+        f"{message}. Souhaitez-vous que je lance la coordination avec un prestataire adapte ?"
+    )
 
 
 def _plan_name(body: str) -> str:
