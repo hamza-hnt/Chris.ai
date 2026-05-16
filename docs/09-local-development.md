@@ -35,6 +35,7 @@ make eval
 - Health: http://localhost:8000/health
 - Frontend: http://localhost:5173
 - Adminer: http://localhost:8082
+- WhatsApp webhook: http://localhost:8000/webhooks/whatsapp
 
 Adminer defaults:
 
@@ -56,3 +57,4 @@ Adminer defaults:
 
 - [Prompt Engineering](06-prompt-engineering.md)
 - [Tool Contracts](07-tool-contracts.md)
+- [WhatsApp Cloud API Setup](11-whatsapp-cloud-setup.md)

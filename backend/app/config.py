@@ -34,6 +34,28 @@ class Settings(BaseSettings):
     )
     APP_AGENT_TOOL_BUDGET: int = Field(default=20, ge=1, le=100, description="Tool call cap.")
 
+    WHATSAPP_MODE: Literal["stub", "cloud"] = Field(
+        default="stub", description="WhatsApp integration mode."
+    )
+    WHATSAPP_GRAPH_API_VERSION: str = Field(
+        default="v25.0", description="Meta Graph API version for WhatsApp Cloud API."
+    )
+    WHATSAPP_ACCESS_TOKEN: SecretStr | None = Field(
+        default=None, description="WhatsApp Cloud API access token."
+    )
+    WHATSAPP_BUSINESS_ACCOUNT_ID: str | None = Field(
+        default=None, description="WhatsApp Business Account ID."
+    )
+    WHATSAPP_PHONE_NUMBER_ID: str | None = Field(
+        default=None, description="WhatsApp sender phone number ID."
+    )
+    WHATSAPP_VERIFY_TOKEN: SecretStr | None = Field(
+        default=None, description="Webhook verification token configured in Meta."
+    )
+    WHATSAPP_APP_SECRET: SecretStr | None = Field(
+        default=None, description="Meta app secret for X-Hub-Signature-256 validation."
+    )
+
     @model_validator(mode="after")
     def validate_required_secrets(self) -> "Settings":
         missing: list[str] = []
@@ -43,6 +65,15 @@ class Settings(BaseSettings):
             missing.append("TAVILY_API_KEY")
         if not _secret_value(self.POSTGRES_PASSWORD):
             missing.append("POSTGRES_PASSWORD")
+        if self.WHATSAPP_MODE == "cloud":
+            if not _secret_value(self.WHATSAPP_ACCESS_TOKEN):
+                missing.append("WHATSAPP_ACCESS_TOKEN")
+            if not _plain_value(self.WHATSAPP_PHONE_NUMBER_ID):
+                missing.append("WHATSAPP_PHONE_NUMBER_ID")
+            if not _secret_value(self.WHATSAPP_VERIFY_TOKEN):
+                missing.append("WHATSAPP_VERIFY_TOKEN")
+            if self.APP_ENV == "production" and not _secret_value(self.WHATSAPP_APP_SECRET):
+                missing.append("WHATSAPP_APP_SECRET")
         if missing:
             joined = ", ".join(missing)
             raise ValueError(f"Missing or empty required environment variable(s): {joined}")
@@ -65,6 +96,8 @@ class Settings(BaseSettings):
             "postgres_host": self.POSTGRES_HOST,
             "postgres_db": self.POSTGRES_DB,
             "agent_tool_budget": self.APP_AGENT_TOOL_BUDGET,
+            "whatsapp_mode": self.WHATSAPP_MODE,
+            "whatsapp_graph_api_version": self.WHATSAPP_GRAPH_API_VERSION,
         }
 
 
@@ -72,6 +105,10 @@ def _secret_value(value: SecretStr | None) -> str:
     if value is None:
         return ""
     return value.get_secret_value().strip()
+
+
+def _plain_value(value: str | None) -> str:
+    return value.strip() if value else ""
 
 
 @lru_cache

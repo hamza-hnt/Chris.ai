@@ -72,3 +72,4 @@ Demo login accounts:
 - [Prompt Engineering](docs/06-prompt-engineering.md)
 - [Evaluation Strategy](docs/08-evaluation-strategy.md)
 - [Local Development](docs/09-local-development.md)
+- [WhatsApp Cloud API Setup](docs/11-whatsapp-cloud-setup.md)

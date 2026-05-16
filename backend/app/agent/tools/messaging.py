@@ -1,5 +1,7 @@
+from sqlalchemy import select
+
 from app.agent.tools.executor import ToolExecutionContext
-from app.domain.models import ConversationParty
+from app.domain.models import ConversationParty, Lease
 from app.domain.repositories.memory import append_action, append_message
 from app.integrations.email_stub import send_email
 from app.integrations.slng_stub import send_voice
@@ -12,7 +14,12 @@ def send(context: ToolExecutionContext, arguments: dict) -> dict:
     body = arguments["body"].strip()
     attachments = arguments.get("attachments") or []
     if channel == "whatsapp":
-        result = send_whatsapp(to_role, body, attachments)
+        result = send_whatsapp(
+            to_role,
+            body,
+            attachments,
+            to_phone=_resolve_role_phone(context, to_role),
+        )
     elif channel == "email":
         result = send_email(to_role, body, attachments)
     elif channel == "voice":
@@ -35,6 +42,25 @@ def send(context: ToolExecutionContext, arguments: dict) -> dict:
             {"role": "agent", "body": body, "channel": channel},
         )
     return {"ok": True, "message": result}
+
+
+def _resolve_role_phone(context: ToolExecutionContext, to_role: str) -> str | None:
+    lease = (
+        context.db.execute(
+            select(Lease)
+            .where(Lease.property_id == context.property_id)
+            .order_by(Lease.start_date.desc())
+        )
+        .scalars()
+        .first()
+    )
+    if lease is None:
+        return None
+    if to_role == "tenant":
+        return lease.tenant.phone
+    if to_role == "landlord":
+        return lease.landlord.phone
+    return None
 
 
 def ask_question(context: ToolExecutionContext, arguments: dict) -> dict:
