@@ -4,13 +4,18 @@ import {
   AlertCircle,
   ArrowRight,
   Building2,
+  CalendarDays,
   CheckCircle2,
+  ChevronRight,
   CircleDot,
   Clock3,
   Home,
   KeyRound,
   LogOut,
+  Mail,
+  MapPin,
   MessageSquare,
+  Phone,
   RefreshCcw,
   ShieldCheck,
   UserRound,
@@ -237,19 +242,26 @@ function App() {
   return (
     <main className="app-frame">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">{isLandlord ? "Owner operations" : "Tenant portal"}</p>
-          <h1>{dashboard.viewer.name}</h1>
-          <p className="subtle">
-            {isLandlord
-              ? "Track every tenant request across your rental portfolio"
-              : "Track the progress of your current property requests"}
-          </p>
+        <div className="brand-lockup">
+          <span className="brand-mark">C</span>
+          <div>
+            <p className="eyebrow">{isLandlord ? "Owner operations" : "Tenant portal"}</p>
+            <h1>{dashboard.viewer.name}</h1>
+            <p className="subtle">
+              {isLandlord
+                ? `${dashboard.metrics.properties} active units across the Paris portfolio`
+                : selectedProperty?.property.address ?? "Current rental"}
+            </p>
+          </div>
         </div>
         <div className="topbar-actions">
           <span className="viewer-pill">
             <UserRound size={16} />
             {dashboard.viewer.email ?? dashboard.viewer.phone}
+          </span>
+          <span className="live-pill">
+            <CircleDot size={14} />
+            Live
           </span>
           <button className="icon-button" onClick={() => loadDashboard()} aria-label="Refresh dashboard">
             <RefreshCcw size={18} />
@@ -261,24 +273,42 @@ function App() {
       </header>
 
       <section className="metrics-grid" aria-label="Portfolio metrics">
-        <Metric icon={<Building2 />} label={isLandlord ? "Properties" : "My units"} value={dashboard.metrics.properties} />
-        <Metric icon={<Users />} label={isLandlord ? "Tenants" : "Tenant"} value={dashboard.metrics.tenants} />
-        <Metric icon={<Wrench />} label="Open requests" value={dashboard.metrics.open_requests} />
+        <Metric
+          icon={<Building2 />}
+          label={isLandlord ? "Properties" : "My unit"}
+          value={dashboard.metrics.properties}
+          meta="Active leases"
+        />
+        <Metric
+          icon={<Users />}
+          label={isLandlord ? "Tenants" : "Tenant"}
+          value={dashboard.metrics.tenants}
+          meta={isLandlord ? "Assigned occupants" : "Signed in"}
+        />
+        <Metric
+          icon={<Wrench />}
+          label="Open requests"
+          value={dashboard.metrics.open_requests}
+          meta={`${dashboard.metrics.blocked_requests} blocked`}
+        />
         <Metric
           icon={<AlertCircle />}
           label="Owner decisions"
           value={dashboard.metrics.pending_owner_decisions}
+          meta={dashboard.metrics.pending_owner_decisions > 0 ? "Needs review" : "Clear"}
           tone={dashboard.metrics.pending_owner_decisions > 0 ? "warning" : "normal"}
         />
         <Metric
           icon={<ShieldCheck />}
           label="Avg. progress"
           value={`${dashboard.metrics.average_progress}%`}
+          meta="Across requests"
         />
         <Metric
           icon={<Home />}
           label={isLandlord ? "Monthly rent" : "Monthly total"}
           value={formatCurrency(dashboard.metrics.monthly_revenue)}
+          meta="Charges included"
         />
       </section>
 
@@ -289,6 +319,7 @@ function App() {
               <p className="eyebrow">{isLandlord ? "Portfolio" : "Rental"}</p>
               <h2>{isLandlord ? "Tenant units" : "My unit"}</h2>
             </div>
+            <span className="muted-count">{dashboard.properties.length}</span>
           </div>
           <div className="property-list">
             {dashboard.properties.map((item) => (
@@ -302,11 +333,17 @@ function App() {
                   setSelectedRequestId(item.requests[0]?.id ?? dashboard.requests[0]?.id ?? null);
                 }}
               >
+                <span className="property-avatar">
+                  <Home size={17} />
+                </span>
                 <span className="property-main">
                   <strong>{item.property.address}</strong>
-                  <small>{isLandlord ? item.tenant.name : `${item.property.type} · ${item.property.size}`}</small>
+                  <small>
+                    {isLandlord ? item.tenant.name : `${formatTitle(item.property.type)} · ${item.property.size}`}
+                  </small>
+                  <small>{formatCurrency(Number(item.lease.monthly_total))} / month</small>
                 </span>
-                <span className="status-pill">{item.requests.length} requests</span>
+                <span className="count-pill">{item.requests.length}</span>
               </button>
             ))}
           </div>
@@ -337,11 +374,14 @@ function App() {
                   setSelectedPropertyId(request.property_id);
                 }}
               >
-                <span>
+                <span className="request-summary">
                   <strong>{cleanRequestName(request.name)}</strong>
-                  <small>{request.property_address}</small>
+                  <small>
+                    <MapPin size={13} />
+                    {request.property_address}
+                  </small>
                 </span>
-                <span>{isLandlord ? request.tenant_name : "My rental"}</span>
+                <span className="request-party">{isLandlord ? request.tenant_name : "My rental"}</span>
                 <span>
                   <StatusPill request={request} />
                 </span>
@@ -349,6 +389,7 @@ function App() {
                   <ProgressBar value={request.progress} />
                   <small>{request.progress}%</small>
                 </span>
+                <ChevronRight className="row-chevron" size={17} />
               </button>
             ))}
           </div>
@@ -409,50 +450,68 @@ function LoginScreen({ onLogin }: { onLogin: (session: LoginResponse) => void })
     <main className="login-frame">
       <section className="login-panel">
         <div className="login-copy">
-          <p className="eyebrow">Chris.AI Portal</p>
-          <h1>Property operations, scoped to the signed-in user.</h1>
-          <p>
-            Owners see every tenant request across their portfolio. Tenants see only their
-            own rental and the progress of their requests.
-          </p>
+          <div className="brand-lockup">
+            <span className="brand-mark">C</span>
+            <div>
+              <p className="eyebrow">Chris.AI Portal</p>
+              <h1>Property request control room.</h1>
+            </div>
+          </div>
+          <div className="login-ledger" aria-label="Demo portfolio snapshot">
+            <span>
+              <strong>2</strong>
+              Paris units
+            </span>
+            <span>
+              <strong>2</strong>
+              Open cases
+            </span>
+            <span>
+              <strong>1</strong>
+              Owner decision
+            </span>
+          </div>
         </div>
 
-        <form
-          className="login-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submitLogin();
-          }}
-        >
-          <span className="login-icon">
-            <KeyRound size={20} />
-          </span>
-          <label htmlFor="identifier">Email or phone</label>
-          <input
-            id="identifier"
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            placeholder="hamza.landlord@example.com"
-          />
-          {error ? <p className="form-error">{error}</p> : null}
-          <button className="login-button" disabled={isLoading || !identifier.trim()}>
-            {isLoading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-
-        <div className="demo-users">
-          <h2>Demo accounts</h2>
-          {demoUsers.map((user) => (
-            <button key={user.id} onClick={() => submitLogin(user.identifier)}>
-              <span>
-                <strong>{user.name}</strong>
-                <small>
-                  {user.role} · {user.identifier}
-                </small>
-              </span>
-              <ArrowRight size={16} />
+        <div className="login-stack">
+          <form
+            className="login-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submitLogin();
+            }}
+          >
+            <span className="login-icon">
+              <KeyRound size={20} />
+            </span>
+            <label htmlFor="identifier">Email or phone</label>
+            <input
+              id="identifier"
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
+              placeholder="hamza.landlord@example.com"
+            />
+            {error ? <p className="form-error">{error}</p> : null}
+            <button className="login-button" disabled={isLoading || !identifier.trim()}>
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
-          ))}
+          </form>
+
+          <div className="demo-users">
+            <h2>Demo accounts</h2>
+            {demoUsers.map((user) => (
+              <button key={user.id} onClick={() => submitLogin(user.identifier)}>
+                <span className="user-initials">{getInitials(user.name)}</span>
+                <span>
+                  <strong>{user.name}</strong>
+                  <small>
+                    {formatTitle(user.role ?? "user")} · {user.identifier}
+                  </small>
+                </span>
+                <ArrowRight size={16} />
+              </button>
+            ))}
+          </div>
         </div>
       </section>
     </main>
@@ -463,18 +522,23 @@ function Metric({
   icon,
   label,
   value,
+  meta,
   tone = "normal",
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
+  meta: string;
   tone?: "normal" | "warning";
 }) {
   return (
     <div className={`metric metric--${tone}`}>
-      <span className="metric-icon">{icon}</span>
-      <span className="metric-label">{label}</span>
+      <span className="metric-top">
+        <span className="metric-icon">{icon}</span>
+        <span className="metric-label">{label}</span>
+      </span>
       <strong>{value}</strong>
+      <small>{meta}</small>
     </div>
   );
 }
@@ -494,11 +558,15 @@ function RequestDetail({
         <div>
           <p className="eyebrow">Request detail</p>
           <h2>{cleanRequestName(request.name)}</h2>
+          <small>
+            <CalendarDays size={13} />
+            Updated {request.updated_at ? formatDateTime(request.updated_at) : "recently"}
+          </small>
         </div>
         <StatusPill request={request} />
       </div>
 
-      <div className="decision-strip">
+      <div className={`decision-strip ${request.owner_action_required ? "is-warning" : "is-clear"}`}>
         {request.owner_action_required ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
         <span>
           {request.owner_action_required
@@ -515,8 +583,25 @@ function RequestDetail({
         <ProgressBar value={request.progress} />
       </div>
 
-      <section className="detail-section">
-        <h3>Next action</h3>
+      {property ? (
+        <section className="detail-card">
+          <div className="detail-card-title">
+            <MapPin size={16} />
+            <h3>Property</h3>
+          </div>
+          <p>{property.property.address}</p>
+          <div className="facts-grid">
+            <Fact label="Type" value={`${formatTitle(property.property.type)} · ${property.property.size ?? "Size n/a"}`} />
+            <Fact label="Tenant" value={property.tenant.name} />
+          </div>
+        </section>
+      ) : null}
+
+      <section className="detail-card detail-card--accent">
+        <div className="detail-card-title">
+          <Clock3 size={16} />
+          <h3>Next action</h3>
+        </div>
         <p>{request.next_step}</p>
       </section>
 
@@ -542,10 +627,12 @@ function RequestDetail({
           <section className="detail-section">
             <h3>{role === "landlord" ? "Tenant and lease" : "My lease"}</h3>
             <div className="facts-grid">
-              <Fact label="Tenant" value={property.tenant.name} />
-              <Fact label="Phone" value={property.tenant.phone ?? "Not set"} />
+              <Fact label={role === "landlord" ? "Tenant" : "Occupant"} value={property.tenant.name} />
+              <Fact label="Phone" value={property.tenant.phone ?? "Not set"} icon={<Phone size={13} />} />
+              <Fact label="Email" value={property.tenant.email ?? "Not set"} icon={<Mail size={13} />} />
               <Fact label="Monthly total" value={formatCurrency(Number(property.lease.monthly_total))} />
               <Fact label="Due day" value={`Day ${property.lease.payment_due_day}`} />
+              <Fact label="Lease type" value={formatTitle(property.lease.lease_type)} />
             </div>
           </section>
 
@@ -556,7 +643,7 @@ function RequestDetail({
                 <div className="activity-row" key={action.id}>
                   <MessageSquare size={15} />
                   <span>
-                    <strong>{action.kind}</strong>
+                    <strong>{formatActivityKind(action.kind)}</strong>
                     <small>{formatDateTime(action.created_at)}</small>
                   </span>
                 </div>
@@ -570,6 +657,15 @@ function RequestDetail({
                   </span>
                 </div>
               ))}
+              {!property.recent_actions.length && !property.recent_tool_traces.length ? (
+                <div className="activity-row">
+                  <CircleDot size={15} />
+                  <span>
+                    <strong>No activity yet</strong>
+                    <small>Waiting for the first operation event</small>
+                  </span>
+                </div>
+              ) : null}
             </div>
           </section>
         </>
@@ -580,21 +676,42 @@ function RequestDetail({
 
 function StatusPill({ request }: { request: RequestItem }) {
   const label = request.owner_action_required ? "Decision" : request.status;
-  return <span className={`status-pill status-pill--${request.status}`}>{label}</span>;
-}
-
-function ProgressBar({ value }: { value: number }) {
   return (
-    <span className="progress-track" aria-label={`Progress ${value}%`}>
-      <span className="progress-fill" style={{ width: `${Math.min(value, 100)}%` }} />
+    <span
+      className={`status-pill status-pill--${request.status} ${
+        request.owner_action_required ? "status-pill--decision" : ""
+      }`}
+    >
+      {formatTitle(label)}
     </span>
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function ProgressBar({ value }: { value: number }) {
+  const normalizedValue = Math.max(0, Math.min(value, 100));
+
+  return (
+    <span className="progress-track" aria-label={`Progress ${normalizedValue}%`}>
+      <span className="progress-fill" style={{ width: `${normalizedValue}%` }} />
+    </span>
+  );
+}
+
+function Fact({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}) {
   return (
     <span className="fact">
-      <small>{label}</small>
+      <small>
+        {icon}
+        {label}
+      </small>
       <strong>{value}</strong>
     </span>
   );
@@ -602,6 +719,27 @@ function Fact({ label, value }: { label: string; value: string }) {
 
 function cleanRequestName(name: string) {
   return name.replace(/^Request:\s*/i, "");
+}
+
+function formatTitle(value: string) {
+  return value
+    .replace(/[_-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatActivityKind(kind: string) {
+  return formatTitle(kind.replace(/\./g, " "));
+}
+
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }
 
 function formatCurrency(value: number) {
