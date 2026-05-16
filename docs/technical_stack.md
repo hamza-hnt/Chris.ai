@@ -15,7 +15,7 @@ The backend is stateless by design. No application instance keeps critical state
 | Frontend | React | BI dashboard and supervision interface |
 | Backend | FastAPI / Python | Main API, webhooks, business orchestration |
 | AI Agent | OpenAI API | Reasoning, decision-making, response generation |
-| Agent Context | MongoDB | Agent memory, conversations, cases, plans, workflow state |
+| Agent Context | PostgreSQL JSONB | Agent memory, conversations, cases, plans, workflow state |
 | ACID Data | PostgreSQL | Users, properties, leases, payments, providers, permissions |
 | Web Search | Tavily | Real-time web search and external information retrieval |
 | Voice | Gradium | Speech-to-text and text-to-speech interactions |
@@ -31,7 +31,7 @@ Its main responsibilities are:
 - Receive inbound messages from WhatsApp and email channels.
 - Identify the tenant, owner, property, lease, and related case.
 - Load relational business data from PostgreSQL.
-- Load agent context and workflow state from MongoDB.
+- Load agent context and workflow state from PostgreSQL JSONB.
 - Invoke the OpenAI-powered agent with the appropriate context and constraints.
 - Trigger external tools such as Tavily, WhatsApp, email, Gradium, and provider integrations.
 - Persist messages, decisions, tool traces, case updates, and workflow changes.
@@ -54,11 +54,11 @@ The agent can:
 
 The agent must follow the platform's business rules, including confidentiality between parties, owner validation before spending, strict tracking of active workflows, and systematic persistence of important decisions.
 
-## MongoDB
+## PostgreSQL JSONB
 
-MongoDB stores flexible operational memory for the agent. This data is highly dynamic, document-oriented, and may evolve as workflows become more advanced.
+PostgreSQL JSONB stores flexible operational memory for the agent. This data is highly dynamic, document-oriented, and may evolve as workflows become more advanced.
 
-MongoDB is used for:
+JSONB is used for:
 
 - Conversation history.
 - Tenant and owner interaction context.
@@ -69,7 +69,16 @@ MongoDB is used for:
 - Temporary workflow state.
 - Agent-facing operational memory.
 
-MongoDB is appropriate for this layer because the data is naturally JSON-based, semi-structured, and variable across different cases and workflows.
+JSONB is appropriate for this layer because the data is naturally JSON-based, semi-structured, and variable across different cases and workflows, while staying inside the same PostgreSQL database as the business data.
+
+This is a deliberate architecture choice:
+
+- A single database is simpler to operate, back up, secure, and monitor.
+- Agent context and business data can be updated in the same ACID transaction.
+- Property-level isolation can be enforced consistently through PostgreSQL permissions and row-level security if needed later.
+- JSONB provides enough flexibility for evolving agent workflows without introducing a second database.
+
+The main trade-off is that extremely large conversation stores, such as millions of messages per active workspace, may eventually benefit from a dedicated document or event storage system. This is not relevant for the current stage, and PostgreSQL can still scale far with proper indexing, retention policies, and partitioning.
 
 ## PostgreSQL
 
@@ -92,14 +101,14 @@ PostgreSQL provides ACID transactions, relational integrity, foreign keys, uniqu
 
 ## Data Ownership
 
-The platform separates operational agent memory from authoritative business data.
+The platform separates operational agent memory from authoritative business data at the schema and table level, while keeping both in PostgreSQL.
 
 | Data Type | Storage | Rationale |
 | --- | --- | --- |
-| Agent context | MongoDB | Flexible JSON memory |
-| Conversations | MongoDB | Semi-structured history |
-| Plans and milestones | MongoDB | Variable workflow structures |
-| Tool traces | MongoDB | High-volume, loosely structured records |
+| Agent context | PostgreSQL JSONB | Flexible JSON memory with ACID guarantees |
+| Conversations | PostgreSQL JSONB | Semi-structured history tied to business entities |
+| Plans and milestones | PostgreSQL JSONB | Variable workflow structures in the same transaction scope |
+| Tool traces | PostgreSQL JSONB | Loosely structured records with queryable metadata |
 | Users | PostgreSQL | Identity and relational integrity |
 | Properties | PostgreSQL | Structured business data |
 | Leases | PostgreSQL | Contractual records requiring consistency |
@@ -113,7 +122,7 @@ The backend does not rely on durable in-memory state. Each request follows the s
 
 1. Receive an inbound event.
 2. Load business data from PostgreSQL.
-3. Load agent context from MongoDB.
+3. Load agent context from PostgreSQL JSONB.
 4. Execute the agent workflow in memory.
 5. Trigger external actions if required.
 6. Persist the updated context, decisions, actions, and case state.
@@ -128,7 +137,7 @@ When a tenant reports an issue through WhatsApp:
 1. WhatsApp sends the inbound message to a FastAPI webhook.
 2. FastAPI identifies the sender, tenant, property, lease, and related case.
 3. FastAPI loads authoritative business data from PostgreSQL.
-4. FastAPI loads the relevant agent context from MongoDB.
+4. FastAPI loads the relevant agent context from PostgreSQL JSONB.
 5. The OpenAI agent analyzes the request and determines the next step.
 6. The agent updates the active case, workflow plan, and milestones.
 7. Tavily may be used if real-time web information is required.
@@ -151,7 +160,7 @@ It should expose:
 - Operational metrics.
 - Escalations requiring human review.
 
-The dashboard is a supervision layer, not the source of truth. It reads from backend APIs that aggregate data from PostgreSQL and MongoDB.
+The dashboard is a supervision layer, not the source of truth. It reads from backend APIs that aggregate relational and JSONB data from PostgreSQL.
 
 ## External Integrations
 
@@ -171,7 +180,7 @@ External calls should be traced and persisted so the system can provide auditabi
 The initial architecture is based on the following principles:
 
 - PostgreSQL is the business source of truth.
-- MongoDB is the operational memory of the agent.
+- PostgreSQL JSONB is the operational memory of the agent.
 - FastAPI orchestrates business workflows and integrations.
 - The OpenAI API provides agentic reasoning and response generation.
 - The backend remains stateless and horizontally scalable.
