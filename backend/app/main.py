@@ -2,6 +2,8 @@ import logging
 
 from fastapi import FastAPI
 
+from app.api.auth import router as auth_router
+from app.api.portal import router as portal_router
 from app.api.supervisor.dashboard import router as dashboard_router
 from app.api.health import router as health_router
 from app.api.supervisor.intervention import router as intervention_router
@@ -25,6 +27,8 @@ def on_startup() -> None:
 
 
 app.include_router(health_router)
+app.include_router(auth_router)
+app.include_router(portal_router)
 app.include_router(whatsapp_router, prefix="/webhooks")
 app.include_router(email_router, prefix="/webhooks")
 app.include_router(dashboard_router, prefix="/supervisor")

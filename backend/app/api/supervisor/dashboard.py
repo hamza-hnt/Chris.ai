@@ -31,7 +31,10 @@ def landlord_dashboard(
     landlord = _resolve_landlord(db, landlord_id, landlord_phone)
     if landlord is None:
         raise HTTPException(status_code=404, detail="No landlord found for dashboard.")
+    return build_landlord_dashboard(db, landlord)
 
+
+def build_landlord_dashboard(db: Session, landlord: User) -> dict:
     leases = (
         db.execute(
             select(Lease)
@@ -44,20 +47,54 @@ def landlord_dashboard(
 
     properties = [_property_row(db, lease) for lease in leases]
     requests = [request for row in properties for request in row["requests"]]
+    return _dashboard_response(
+        viewer=landlord,
+        role="landlord",
+        properties=properties,
+        requests=requests,
+    )
+
+
+def build_tenant_dashboard(db: Session, tenant: User) -> dict:
+    leases = (
+        db.execute(
+            select(Lease)
+            .where(Lease.tenant_id == tenant.id)
+            .order_by(Lease.start_date.desc())
+        )
+        .scalars()
+        .all()
+    )
+    properties = [_property_row(db, lease) for lease in leases]
+    requests = [request for row in properties for request in row["requests"]]
+    return _dashboard_response(
+        viewer=tenant,
+        role="tenant",
+        properties=properties,
+        requests=requests,
+    )
+
+
+def _dashboard_response(
+    viewer: User,
+    role: str,
+    properties: list[dict],
+    requests: list[dict],
+) -> dict:
     open_requests = [request for request in requests if request["status"] in {"active", "blocked"}]
     blocked_requests = [request for request in requests if request["status"] == "blocked"]
     pending_owner_decisions = sum(
-        1
-        for row in properties
-        for action in row["recent_actions"]
-        if action["kind"] == "messaging.send"
-        and action.get("payload", {}).get("to_role") == "landlord"
+        1 for request in requests if request.get("owner_action_required") is True
     )
     monthly_revenue = sum(float(row["lease"]["monthly_total"]) for row in properties)
     progress_values = [request["progress"] for request in open_requests]
 
     return {
-        "landlord": model_to_dict(landlord, ["id", "name", "email", "phone"]),
+        "viewer": model_to_dict(viewer, ["id", "name", "email", "phone", "role"]),
+        "landlord": model_to_dict(viewer, ["id", "name", "email", "phone"])
+        if viewer.role == UserRole.landlord
+        else None,
+        "role": role,
         "metrics": {
             "properties": len(properties),
             "tenants": len({row["tenant"]["id"] for row in properties if row.get("tenant")}),

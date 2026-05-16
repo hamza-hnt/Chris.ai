@@ -25,7 +25,7 @@ system is intentionally thin but runnable.
    make up
    ```
 
-4. Apply migrations and seed one demo property:
+4. Apply migrations and seed the demo portfolio:
 
    ```bash
    make migrate
@@ -45,11 +45,17 @@ Services:
 - Frontend dashboard: http://localhost:5173
 - Adminer: http://localhost:8082
 
+Demo login accounts:
+
+- Landlord: `marc.landlord@example.com`
+- Tenant: `amina.tenant@example.com`
+- Tenant: `hugo.tenant@example.com`
+
 ## What Is Implemented
 
 - Docker Compose stack for PostgreSQL, FastAPI, Vite, and Adminer.
-- Landlord dashboard showing properties, tenants, request progress, recent
-  actions, and agent traces.
+- Demo login and role-scoped dashboard access. Landlords see all tenant
+  requests for their properties; tenants see only their own request progress.
 - Pydantic settings with fail-fast secret validation.
 - Alembic migration for the relational and JSONB-backed data model.
 - Context-injected Chris agent with provider abstraction and stubbed tools.

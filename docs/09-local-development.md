@@ -23,6 +23,12 @@ make sample
 make eval
 ```
 
+`make seed` rebuilds the demo portfolio with one landlord and two tenants:
+
+- Landlord: `marc.landlord@example.com`
+- Tenant: `amina.tenant@example.com`
+- Tenant: `hugo.tenant@example.com`
+
 ## Services
 
 - Backend: http://localhost:8000
@@ -43,7 +49,8 @@ Adminer defaults:
 1. Edit prompt partials or tool contracts.
 2. Run `make eval`.
 3. If backend code changed, run `make up` and inspect `/health`.
-4. Run `make seed` and `make sample` to produce tool traces.
+4. Run `make seed` and open the frontend portal to test role-scoped dashboards.
+5. Run `make sample` to produce tool traces.
 
 ## Read Next
 

@@ -8,16 +8,23 @@ import {
   CircleDot,
   Clock3,
   Home,
+  KeyRound,
+  LogOut,
   MessageSquare,
   RefreshCcw,
   ShieldCheck,
+  UserRound,
   Users,
   Wrench,
 } from "lucide-react";
 import "./styles.css";
 
+type Role = "landlord" | "tenant";
+
 type Dashboard = {
-  landlord: Person;
+  viewer: Person;
+  landlord: Person | null;
+  role: Role;
   metrics: {
     properties: number;
     tenants: number;
@@ -31,9 +38,19 @@ type Dashboard = {
   requests: RequestItem[];
 };
 
+type LoginResponse = {
+  access_token: string;
+  user: Person;
+};
+
+type DemoUser = Person & {
+  identifier: string;
+};
+
 type Person = {
   id: string;
   name: string;
+  role?: Role;
   email?: string;
   phone?: string;
 };
@@ -103,18 +120,27 @@ type ConversationPreview = {
   last_message?: { body?: string; role?: string; channel?: string };
 };
 
+const SESSION_KEY = "chris-demo-session";
+
 function App() {
+  const [session, setSession] = useState<LoginResponse | null>(() => {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as LoginResponse) : null;
+  });
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(session));
   const [error, setError] = useState<string | null>(null);
 
-  async function loadDashboard() {
+  async function loadDashboard(activeSession = session) {
+    if (!activeSession) return;
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/supervisor/dashboard");
+      const response = await fetch("/api/portal/dashboard", {
+        headers: { "X-User-Id": activeSession.access_token },
+      });
       if (!response.ok) {
         throw new Error(`Dashboard API returned ${response.status}`);
       }
@@ -129,8 +155,28 @@ function App() {
     }
   }
 
+  function applySession(nextSession: LoginResponse) {
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
+    setSession(nextSession);
+    setDashboard(null);
+    setSelectedPropertyId(null);
+    setSelectedRequestId(null);
+    loadDashboard(nextSession);
+  }
+
+  function logout() {
+    window.localStorage.removeItem(SESSION_KEY);
+    setSession(null);
+    setDashboard(null);
+    setSelectedPropertyId(null);
+    setSelectedRequestId(null);
+    setError(null);
+  }
+
   useEffect(() => {
-    loadDashboard();
+    if (session) {
+      loadDashboard(session);
+    }
   }, []);
 
   const selectedProperty = useMemo(() => {
@@ -147,12 +193,16 @@ function App() {
     return dashboard.requests.find((request) => request.id === selectedRequestId) ?? null;
   }, [dashboard, selectedRequestId]);
 
+  if (!session) {
+    return <LoginScreen onLogin={applySession} />;
+  }
+
   if (isLoading && !dashboard) {
     return (
       <main className="app-frame app-frame--centered">
         <div className="loading-panel">
           <RefreshCcw className="spin" size={22} />
-          <span>Loading portfolio operations</span>
+          <span>Loading operations</span>
         </div>
       </main>
     );
@@ -165,10 +215,16 @@ function App() {
           <AlertCircle size={28} />
           <h1>Dashboard unavailable</h1>
           <p>{error}</p>
-          <button className="primary-button" onClick={loadDashboard}>
-            <RefreshCcw size={16} />
-            Retry
-          </button>
+          <div className="button-row">
+            <button className="primary-button" onClick={() => loadDashboard()}>
+              <RefreshCcw size={16} />
+              Retry
+            </button>
+            <button className="primary-button" onClick={logout}>
+              <LogOut size={16} />
+              Sign out
+            </button>
+          </div>
         </section>
       </main>
     );
@@ -176,22 +232,37 @@ function App() {
 
   if (!dashboard) return null;
 
+  const isLandlord = dashboard.role === "landlord";
+
   return (
     <main className="app-frame">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Owner operations</p>
-          <h1>{dashboard.landlord.name}</h1>
-          <p className="subtle">{dashboard.landlord.email ?? dashboard.landlord.phone}</p>
+          <p className="eyebrow">{isLandlord ? "Owner operations" : "Tenant portal"}</p>
+          <h1>{dashboard.viewer.name}</h1>
+          <p className="subtle">
+            {isLandlord
+              ? "Track every tenant request across your rental portfolio"
+              : "Track the progress of your current property requests"}
+          </p>
         </div>
-        <button className="icon-button" onClick={loadDashboard} aria-label="Refresh dashboard">
-          <RefreshCcw size={18} />
-        </button>
+        <div className="topbar-actions">
+          <span className="viewer-pill">
+            <UserRound size={16} />
+            {dashboard.viewer.email ?? dashboard.viewer.phone}
+          </span>
+          <button className="icon-button" onClick={() => loadDashboard()} aria-label="Refresh dashboard">
+            <RefreshCcw size={18} />
+          </button>
+          <button className="icon-button" onClick={logout} aria-label="Sign out">
+            <LogOut size={18} />
+          </button>
+        </div>
       </header>
 
       <section className="metrics-grid" aria-label="Portfolio metrics">
-        <Metric icon={<Building2 />} label="Properties" value={dashboard.metrics.properties} />
-        <Metric icon={<Users />} label="Tenants" value={dashboard.metrics.tenants} />
+        <Metric icon={<Building2 />} label={isLandlord ? "Properties" : "My units"} value={dashboard.metrics.properties} />
+        <Metric icon={<Users />} label={isLandlord ? "Tenants" : "Tenant"} value={dashboard.metrics.tenants} />
         <Metric icon={<Wrench />} label="Open requests" value={dashboard.metrics.open_requests} />
         <Metric
           icon={<AlertCircle />}
@@ -206,7 +277,7 @@ function App() {
         />
         <Metric
           icon={<Home />}
-          label="Monthly rent"
+          label={isLandlord ? "Monthly rent" : "Monthly total"}
           value={formatCurrency(dashboard.metrics.monthly_revenue)}
         />
       </section>
@@ -215,8 +286,8 @@ function App() {
         <aside className="portfolio-panel" aria-label="Properties">
           <div className="section-header">
             <div>
-              <p className="eyebrow">Portfolio</p>
-              <h2>Tenant units</h2>
+              <p className="eyebrow">{isLandlord ? "Portfolio" : "Rental"}</p>
+              <h2>{isLandlord ? "Tenant units" : "My unit"}</h2>
             </div>
           </div>
           <div className="property-list">
@@ -233,7 +304,7 @@ function App() {
               >
                 <span className="property-main">
                   <strong>{item.property.address}</strong>
-                  <small>{item.tenant.name}</small>
+                  <small>{isLandlord ? item.tenant.name : `${item.property.type} · ${item.property.size}`}</small>
                 </span>
                 <span className="status-pill">{item.requests.length} requests</span>
               </button>
@@ -245,7 +316,7 @@ function App() {
           <div className="section-header">
             <div>
               <p className="eyebrow">Requests</p>
-              <h2>Progress by tenant</h2>
+              <h2>{isLandlord ? "Progress by tenant" : "My request progress"}</h2>
             </div>
             <span className="muted-count">{dashboard.requests.length} total</span>
           </div>
@@ -253,7 +324,7 @@ function App() {
           <div className="request-table">
             <div className="request-table-head">
               <span>Request</span>
-              <span>Tenant</span>
+              <span>{isLandlord ? "Tenant" : "Property"}</span>
               <span>Status</span>
               <span>Progress</span>
             </div>
@@ -270,7 +341,7 @@ function App() {
                   <strong>{cleanRequestName(request.name)}</strong>
                   <small>{request.property_address}</small>
                 </span>
-                <span>{request.tenant_name}</span>
+                <span>{isLandlord ? request.tenant_name : "My rental"}</span>
                 <span>
                   <StatusPill request={request} />
                 </span>
@@ -285,7 +356,7 @@ function App() {
 
         <aside className="detail-panel" aria-label="Request detail">
           {selectedRequest ? (
-            <RequestDetail request={selectedRequest} property={selectedProperty} />
+            <RequestDetail request={selectedRequest} property={selectedProperty} role={dashboard.role} />
           ) : (
             <div className="empty-detail">
               <CircleDot size={22} />
@@ -293,6 +364,96 @@ function App() {
             </div>
           )}
         </aside>
+      </section>
+    </main>
+  );
+}
+
+function LoginScreen({ onLogin }: { onLogin: (session: LoginResponse) => void }) {
+  const [identifier, setIdentifier] = useState("");
+  const [demoUsers, setDemoUsers] = useState<DemoUser[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/demo-users")
+      .then((response) => response.json())
+      .then((data: { users: DemoUser[] }) => {
+        setDemoUsers(data.users);
+        setIdentifier(data.users[0]?.identifier ?? "");
+      })
+      .catch(() => setError("Demo accounts are unavailable."));
+  }, []);
+
+  async function submitLogin(nextIdentifier = identifier) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: nextIdentifier }),
+      });
+      if (!response.ok) {
+        throw new Error("Unknown account.");
+      }
+      onLogin((await response.json()) as LoginResponse);
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Login failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <main className="login-frame">
+      <section className="login-panel">
+        <div className="login-copy">
+          <p className="eyebrow">Chris.AI Portal</p>
+          <h1>Property operations, scoped to the signed-in user.</h1>
+          <p>
+            Owners see every tenant request across their portfolio. Tenants see only their
+            own rental and the progress of their requests.
+          </p>
+        </div>
+
+        <form
+          className="login-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitLogin();
+          }}
+        >
+          <span className="login-icon">
+            <KeyRound size={20} />
+          </span>
+          <label htmlFor="identifier">Email or phone</label>
+          <input
+            id="identifier"
+            value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
+            placeholder="marc.landlord@example.com"
+          />
+          {error ? <p className="form-error">{error}</p> : null}
+          <button className="login-button" disabled={isLoading || !identifier.trim()}>
+            {isLoading ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+
+        <div className="demo-users">
+          <h2>Demo accounts</h2>
+          {demoUsers.map((user) => (
+            <button key={user.id} onClick={() => submitLogin(user.identifier)}>
+              <span>
+                <strong>{user.name}</strong>
+                <small>
+                  {user.role} · {user.identifier}
+                </small>
+              </span>
+              <ArrowRight size={16} />
+            </button>
+          ))}
+        </div>
       </section>
     </main>
   );
@@ -321,9 +482,11 @@ function Metric({
 function RequestDetail({
   request,
   property,
+  role,
 }: {
   request: RequestItem;
   property: PropertyPanel | null;
+  role: Role;
 }) {
   return (
     <div className="detail-stack">
@@ -377,7 +540,7 @@ function RequestDetail({
       {property ? (
         <>
           <section className="detail-section">
-            <h3>Tenant and lease</h3>
+            <h3>{role === "landlord" ? "Tenant and lease" : "My lease"}</h3>
             <div className="facts-grid">
               <Fact label="Tenant" value={property.tenant.name} />
               <Fact label="Phone" value={property.tenant.phone ?? "Not set"} />
