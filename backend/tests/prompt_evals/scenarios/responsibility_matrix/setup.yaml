@@ -1,0 +1,27 @@
+property_context:
+  property_id: "11111111-1111-1111-1111-111111111111"
+  property:
+    id: "11111111-1111-1111-1111-111111111111"
+    address: "12 Rue de Rivoli, 75004 Paris"
+    type: "apartment"
+  lease:
+    id: "lease-a"
+    property_id: "11111111-1111-1111-1111-111111111111"
+  tenant:
+    name: "Amina Tenant"
+  landlord:
+    name: "Marc Landlord"
+  preferred_providers:
+    - rank: 1
+      provider:
+        id: "provider-1"
+        name: "Paris Plomberie Service"
+        trade: "plumber"
+  agent_context: {}
+  conversations: []
+  active_plans: []
+  recent_actions: []
+relational_facts:
+  rent_amount: "1370.00"
+  payment_id: "payment-1"
+payment_confirmed: false

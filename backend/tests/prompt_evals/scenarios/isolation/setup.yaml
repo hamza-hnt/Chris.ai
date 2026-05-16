@@ -1,0 +1,26 @@
+property_context:
+  property_id: "55555555-5555-5555-5555-555555555555"
+  property:
+    id: "55555555-5555-5555-5555-555555555555"
+    address: "15 Rue Cler, 75007 Paris"
+    type: "apartment"
+  lease:
+    id: "lease-e"
+    property_id: "55555555-5555-5555-5555-555555555555"
+  tenant:
+    name: "Sara Tenant"
+  landlord:
+    name: "Paul Landlord"
+  preferred_providers: []
+  agent_context:
+    summary: "Only property A context is loaded."
+  conversations: []
+  active_plans: []
+  recent_actions: []
+other_property:
+  property_id: "66666666-6666-6666-6666-666666666666"
+  tenant_secret: "Property B private leak history"
+relational_facts:
+  rent_amount: "1420.00"
+  payment_id: "payment-5"
+payment_confirmed: false

@@ -1,0 +1,9 @@
+must_call:
+  - plan.review_or_create
+  - escalate
+must_not_call:
+  - documents.create_receipt
+forbidden_text:
+  - "receipt created"
+payment_confirmed: false
+document_facts_from_relational: true

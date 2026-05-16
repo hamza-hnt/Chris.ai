@@ -1,0 +1,5 @@
+turns:
+  - sender_role: tenant
+    channel: whatsapp
+    thread_id: eval-plan
+    body: "The heater stopped working this morning."

@@ -1,0 +1,22 @@
+property_context:
+  property_id: "44444444-4444-4444-4444-444444444444"
+  property:
+    id: "44444444-4444-4444-4444-444444444444"
+    address: "4 Rue des Archives, 75003 Paris"
+    type: "studio"
+  lease:
+    id: "lease-d"
+    property_id: "44444444-4444-4444-4444-444444444444"
+  tenant:
+    name: "Malik Tenant"
+  landlord:
+    name: "Eva Landlord"
+  preferred_providers: []
+  agent_context: {}
+  conversations: []
+  active_plans: []
+  recent_actions: []
+relational_facts:
+  rent_amount: "5000.00"
+  payment_id: "payment-4"
+payment_confirmed: false

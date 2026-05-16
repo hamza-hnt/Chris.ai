@@ -1,5 +1,14 @@
 # Technical Stack
 
+This early note is superseded by the structured documentation set:
+
+- [Overview](01-overview.md)
+- [Architecture](02-architecture.md)
+- [Data Model](05-data-model.md)
+- [Local Development](09-local-development.md)
+
+The original notes remain below for historical context.
+
 ## Overview
 
 This project is a cloud-native platform for an autonomous real estate agent. The system coordinates conversations and workflows between tenants, property owners, service providers, and internal supervisors.

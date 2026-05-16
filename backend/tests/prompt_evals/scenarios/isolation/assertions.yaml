@@ -1,0 +1,9 @@
+must_call:
+  - plan.review_or_create
+must_not_call:
+  - documents.create_receipt
+forbidden_text:
+  - "66666666-6666-6666-6666-666666666666"
+  - "Property B private leak history"
+payment_confirmed: false
+document_facts_from_relational: false

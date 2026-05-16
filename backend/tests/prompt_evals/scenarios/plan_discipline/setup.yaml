@@ -1,0 +1,22 @@
+property_context:
+  property_id: "22222222-2222-2222-2222-222222222222"
+  property:
+    id: "22222222-2222-2222-2222-222222222222"
+    address: "8 Avenue Parmentier, 75011 Paris"
+    type: "apartment"
+  lease:
+    id: "lease-b"
+    property_id: "22222222-2222-2222-2222-222222222222"
+  tenant:
+    name: "Nora Tenant"
+  landlord:
+    name: "Ines Landlord"
+  preferred_providers: []
+  agent_context: {}
+  conversations: []
+  active_plans: []
+  recent_actions: []
+relational_facts:
+  rent_amount: "1100.00"
+  payment_id: "payment-2"
+payment_confirmed: false
