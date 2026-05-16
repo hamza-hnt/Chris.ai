@@ -5,7 +5,16 @@ from uuid import UUID
 from sqlalchemy import desc, or_, select
 from sqlalchemy.orm import Session
 
-from app.domain.models import ActionLog, Lease, PropertyPreferredProvider, Provider, User, UserRole
+from app.domain.models import (
+    ActionLog,
+    Conversation,
+    ConversationParty,
+    Lease,
+    PropertyPreferredProvider,
+    Provider,
+    User,
+    UserRole,
+)
 
 
 SenderRole = Literal["tenant", "landlord", "provider", "supervisor"]
@@ -34,7 +43,7 @@ def resolve_sender(db: Session, sender_contact: str) -> RouteResult | None:
         if lease:
             return RouteResult(property_id=lease.property_id, sender_role="tenant", user_id=user.id)
     if user.role == UserRole.landlord:
-        lease = db.execute(select(Lease).where(Lease.landlord_id == user.id)).scalar_one_or_none()
+        lease = _resolve_landlord_lease(db, user.id)
         if lease:
             return RouteResult(property_id=lease.property_id, sender_role="landlord", user_id=user.id)
     if user.role == UserRole.supervisor:
@@ -43,6 +52,45 @@ def resolve_sender(db: Session, sender_contact: str) -> RouteResult | None:
             return RouteResult(property_id=lease.property_id, sender_role="supervisor", user_id=user.id)
 
     return None
+
+
+def _resolve_landlord_lease(db: Session, landlord_id: UUID) -> Lease | None:
+    latest_landlord_thread = (
+        db.execute(
+            select(Lease)
+            .join(Conversation, Conversation.property_id == Lease.property_id)
+            .where(
+                Lease.landlord_id == landlord_id,
+                Conversation.party == ConversationParty.landlord,
+            )
+            .order_by(desc(Conversation.updated_at))
+        )
+        .scalars()
+        .first()
+    )
+    if latest_landlord_thread:
+        return latest_landlord_thread
+
+    latest_action = (
+        db.execute(
+            select(Lease)
+            .join(ActionLog, ActionLog.property_id == Lease.property_id)
+            .where(Lease.landlord_id == landlord_id)
+            .order_by(desc(ActionLog.created_at))
+        )
+        .scalars()
+        .first()
+    )
+    if latest_action:
+        return latest_action
+
+    return (
+        db.execute(
+            select(Lease).where(Lease.landlord_id == landlord_id).order_by(desc(Lease.start_date))
+        )
+        .scalars()
+        .first()
+    )
 
 
 def _resolve_provider(db: Session, contact: str) -> RouteResult | None:

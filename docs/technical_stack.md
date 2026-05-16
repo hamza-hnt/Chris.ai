@@ -23,12 +23,12 @@ The backend is stateless by design. No application instance keeps critical state
 | --- | --- | --- |
 | Frontend | React | BI dashboard and supervision interface |
 | Backend | FastAPI / Python | Main API, webhooks, business orchestration |
-| AI Agent | OpenAI API | Reasoning, decision-making, response generation |
+| AI Agent | OpenAI API / Agents runtime | Reasoning, decision-making, tool use, response generation |
 | Agent Context | PostgreSQL JSONB | Agent memory, conversations, cases, plans, workflow state |
 | ACID Data | PostgreSQL | Users, properties, leases, payments, providers, permissions |
 | Web Search | Tavily | Real-time web search and external information retrieval |
-| Voice | SLNG | Speech-to-text and text-to-speech interactions using SLNG's own models |
-| Communication | WhatsApp / Email | Tenant, owner, and service provider communication |
+| Voice | SLNG Unified API | Speech-to-text for inbound WhatsApp voice notes; TTS remains stubbed |
+| Communication | Twilio WhatsApp Sandbox / Email stubs | Tenant, owner, and service provider communication |
 
 ## FastAPI Backend
 
@@ -36,12 +36,12 @@ FastAPI is the core application layer. It receives external events, applies busi
 
 Its main responsibilities are:
 
-- Receive inbound messages from WhatsApp and email channels.
+- Receive inbound messages from WhatsApp text and WhatsApp voice-note channels.
 - Identify the tenant, owner, property, lease, and related case.
 - Load relational business data from PostgreSQL.
 - Load agent context and workflow state from PostgreSQL JSONB.
 - Invoke the OpenAI-powered agent with the appropriate context and constraints.
-- Trigger external tools such as Tavily, WhatsApp, email, SLNG voice, and provider integrations.
+- Trigger external tools such as Tavily, Twilio WhatsApp, email stubs, SLNG STT, and provider integrations.
 - Persist messages, decisions, tool traces, case updates, and workflow changes.
 - Expose API endpoints consumed by the React dashboard.
 
@@ -142,17 +142,19 @@ This model allows the FastAPI backend to scale horizontally. Multiple backend in
 
 When a tenant reports an issue through WhatsApp:
 
-1. WhatsApp sends the inbound message to a FastAPI webhook.
-2. FastAPI identifies the sender, tenant, property, lease, and related case.
-3. FastAPI loads authoritative business data from PostgreSQL.
-4. FastAPI loads the relevant agent context from PostgreSQL JSONB.
-5. The OpenAI agent analyzes the request and determines the next step.
-6. The agent updates the active case, workflow plan, and milestones.
-7. Tavily may be used if real-time web information is required.
-8. If a paid intervention is needed, the owner is contacted for validation.
-9. After validation, the agent coordinates with the tenant or a service provider.
-10. Messages, actions, tool traces, and state transitions are persisted.
-11. The React dashboard displays the updated operational state.
+1. WhatsApp sends the inbound message to the Twilio webhook.
+2. If the message is a voice note, FastAPI downloads Twilio media and transcribes
+   it through SLNG Unified STT.
+3. FastAPI identifies the sender, tenant, property, lease, and related case.
+4. FastAPI loads authoritative business data from PostgreSQL.
+5. FastAPI loads the relevant agent context from PostgreSQL JSONB.
+6. The OpenAI agent analyzes the request and determines the next step.
+7. The agent updates the active case, workflow plan, and milestones.
+8. Tavily may be used if real-time provider discovery is required.
+9. If a paid intervention is needed, the owner is contacted for validation.
+10. After validation, the agent coordinates with the tenant or a service provider.
+11. Messages, actions, tool traces, and state transitions are persisted.
+12. The React dashboard displays the updated operational state.
 
 ## Dashboard
 
@@ -174,10 +176,10 @@ The dashboard is a supervision layer, not the source of truth. It reads from bac
 
 The platform integrates with multiple external services:
 
-- WhatsApp for tenant and owner communication.
-- Email for service provider communication.
+- Twilio WhatsApp Sandbox for tenant, owner, and worker communication.
+- Email stubs for service-provider communication.
 - Tavily for real-time web search.
-- SLNG for speech-to-text and text-to-speech voice features.
+- SLNG Unified API for speech-to-text voice-note transcription.
 - OpenAI API for agent reasoning and response generation.
 
 External calls should be traced and persisted so the system can provide auditability, debugging context, and dashboard visibility.

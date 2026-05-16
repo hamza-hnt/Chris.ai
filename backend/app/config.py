@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: SecretStr | None = Field(default=None, description="OpenAI API key.")
     OPENAI_MODEL: str = Field(default="gpt-4o", description="OpenAI model id.")
     TAVILY_API_KEY: SecretStr = Field(description="Tavily API key for web search.")
+    SLNG_API_KEY: SecretStr | None = Field(default=None, description="SLNG API key for STT/TTS.")
+    SLNG_STT_MODEL: str = Field(
+        default="slng/deepgram/nova:3-multi",
+        description="SLNG STT model path segment, for example slng/deepgram/nova:3-multi.",
+    )
 
     POSTGRES_HOST: str = Field(description="PostgreSQL host.")
     POSTGRES_PORT: int = Field(default=5432, description="PostgreSQL port.")
@@ -78,6 +83,8 @@ class Settings(BaseSettings):
             missing.append("OPENAI_API_KEY")
         if not _secret_value(self.TAVILY_API_KEY):
             missing.append("TAVILY_API_KEY")
+        if not _secret_value(self.SLNG_API_KEY):
+            missing.append("SLNG_API_KEY")
         if not _secret_value(self.POSTGRES_PASSWORD):
             missing.append("POSTGRES_PASSWORD")
         if self.WHATSAPP_MODE == "cloud":

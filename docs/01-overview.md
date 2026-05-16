@@ -11,16 +11,24 @@ The product has two layers:
   alerts, and human intervention hooks for the whole fleet.
 
 The first build focuses on the single-agent prompt system and a runnable project
-skeleton. WhatsApp, email, SLNG voice, and provider integrations are stubbed.
+skeleton, with enough real integrations to demonstrate the end-to-end operating
+loop. OpenAI powers the agent brain, Tavily powers provider discovery, Twilio
+handles WhatsApp transport, and SLNG transcribes inbound WhatsApp voice notes.
+Email and outbound voice remain stubbed for local development.
 
 ```mermaid
 flowchart LR
-    Tenant[Tenant] --> Router[Deterministic Router]
-    Landlord[Landlord] --> Router
-    Provider[Provider] --> Router
+    Tenant[Tenant] --> WhatsApp[WhatsApp Text or Voice]
+    Landlord[Landlord] --> WhatsApp
+    Provider[Provider] --> WhatsApp
+    WhatsApp --> Twilio[Twilio Webhook]
+    Twilio --> SLNG[SLNG STT for voice notes]
+    Twilio --> Router[Deterministic Router]
+    SLNG --> Router
     Router --> Context[Property-Scoped Context]
     Context --> Chris[Single Chris Agent]
     Chris --> Tools[Tool Executor]
+    Tools --> Tavily[Tavily Provider Search]
     Tools --> Postgres[(PostgreSQL)]
     Supervisor[Supervisor] --> Intervention[Intervention Channel]
     Intervention --> Chris

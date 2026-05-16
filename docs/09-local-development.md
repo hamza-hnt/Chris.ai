@@ -29,6 +29,11 @@ make eval
 - Tenant: `amina.tenant@example.com`
 - Tenant: `hugo.tenant@example.com`
 
+For the hackathon demo, the local database can be enriched with additional
+Hamza-owned tenants so the owner dashboard shows a realistic portfolio. Keep the
+Amina/Hamza property clean before the final WhatsApp walkthrough if you want the
+agent request flow to start from an empty context.
+
 ## Services
 
 - Backend: http://localhost:8000
@@ -53,6 +58,29 @@ Adminer defaults:
 3. If backend code changed, run `make up` and inspect `/health`.
 4. Run `make seed` and open the frontend portal to test role-scoped dashboards.
 5. Run `make sample` to produce tool traces.
+
+## WhatsApp Voice Notes
+
+When `WHATSAPP_MODE=twilio`, inbound WhatsApp text and voice notes use the same
+webhook. Twilio sends voice media as `MediaUrl0` and `MediaContentType0`; the
+backend downloads the file, sends `audio/ogg` voice notes to SLNG Unified STT as
+Opus audio, and then passes the transcript to the agent as a normal current turn.
+
+Useful log lines during manual testing:
+
+```text
+Twilio voice message transcribed
+```
+
+Required local variables for this flow:
+
+```bash
+WHATSAPP_MODE=twilio
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+SLNG_API_KEY=...
+APP_AGENT_RUNTIME=llm
+```
 
 ## Read Next
 

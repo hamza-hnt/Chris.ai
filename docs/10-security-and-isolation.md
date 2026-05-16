@@ -48,7 +48,9 @@ source of legal facts.
 
 - Full authentication and authorization.
 - Row-level security policies.
-- Real WhatsApp, email, or SLNG voice delivery.
+- Production-grade WhatsApp, email, or voice delivery. The hackathon build has
+  a Twilio Sandbox path for WhatsApp text/media and SLNG speech-to-text for
+  inbound voice notes, but it is not production messaging infrastructure.
 - E-signature and accounting exports.
 
 ## Read Next

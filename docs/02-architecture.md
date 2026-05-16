@@ -7,8 +7,9 @@ PostgreSQL database for both relational business data and JSONB agent memory.
 flowchart TB
     subgraph Channels
         WA[WhatsApp]
+        TW[Twilio Sandbox]
         EM[Email]
-    VOX[SLNG Voice]
+        VOX[WhatsApp Voice Note]
     end
 
     subgraph Supervisor
@@ -30,13 +31,17 @@ flowchart TB
     end
 
     subgraph External
-        LLM[LLM Provider]
+        LLM[OpenAI Agent Runtime]
         TAV[Tavily]
+        SLNG[SLNG Unified STT]
     end
 
-    WA --> WH
+    WA --> TW
+    VOX --> TW
+    TW --> WH
+    TW --> SLNG
+    SLNG --> WH
     EM --> WH
-    VOX --> WH
     WH --> ROUTER
     ROUTER --> CTX
     CTX --> PG
@@ -61,15 +66,22 @@ sequenceDiagram
     participant DB
     participant Agent
     participant Tools
+    participant OpenAI
+    participant Tavily
+    participant SLNG
 
-    Channel->>API: Incoming message
+    Channel->>API: Incoming text message
+    Channel->>SLNG: Voice media is transcribed when present
+    SLNG-->>API: Transcript
     API->>Router: Resolve sender contact
     Router->>DB: Lookup contact and lease
     DB-->>Router: property_id and sender_role
     Router->>DB: Load scoped context
     DB-->>Agent: One-property context bundle
+    Agent->>OpenAI: Reason over context and current turn
     Agent->>Tools: plan.review_or_create
     Agent->>Tools: Allowed operational actions
+    Tools->>Tavily: Provider or web search when needed
     Tools->>DB: Scoped writes and traces
     Agent-->>API: Outgoing messages
 ```
@@ -83,6 +95,15 @@ memory.
 Agent code depends on `LLMProvider`, not directly on any SDK. OpenAI is the
 default provider. Anthropic is wired as a stub so provider selection is a config
 change once implemented.
+
+## Hackathon Integrations
+
+- OpenAI: agentic reasoning and response generation through the provider
+  abstraction and the OpenAI agent runtime.
+- Tavily: live web search for provider discovery near the scoped property
+  address.
+- SLNG: speech-to-text for WhatsApp voice notes using the Unified STT endpoint
+  before routing the transcript through the normal agent flow.
 
 ## Read Next
 
