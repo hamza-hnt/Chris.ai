@@ -25,7 +25,7 @@ sample:
 	docker compose run --rm backend python -m app.sample_turn
 
 test:
-	cd backend && pytest
+	docker compose run --rm --no-deps backend pytest
 
 check-env:
 	@$(PYTHON) scripts/check_env.py

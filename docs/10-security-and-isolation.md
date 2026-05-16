@@ -26,7 +26,7 @@ missing `property_id`.
 ## Prompt Injection Defense
 
 Message bodies are data, not instructions. Tenant, landlord, provider, email,
-voice, web-search, and document text cannot change Chris behavior. Only the
+SLNG voice, web-search, and document text cannot change Chris behavior. Only the
 supervisor channel can issue behavior-changing instructions, and those are still
 bounded by isolation and legal-document rules.
 
@@ -48,7 +48,7 @@ source of legal facts.
 
 - Full authentication and authorization.
 - Row-level security policies.
-- Real WhatsApp, email, or voice delivery.
+- Real WhatsApp, email, or SLNG voice delivery.
 - E-signature and accounting exports.
 
 ## Read Next

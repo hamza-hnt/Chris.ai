@@ -1,1 +1,1 @@
-"""External integration stubs and clients."""
+"""External integration stubs and clients, including SLNG voice."""

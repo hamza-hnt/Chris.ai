@@ -2,7 +2,7 @@ from app.agent.tools.executor import ToolExecutionContext
 from app.domain.models import ConversationParty
 from app.domain.repositories.memory import append_action, append_message
 from app.integrations.email_stub import send_email
-from app.integrations.voice_stub import send_voice
+from app.integrations.slng_stub import send_voice
 from app.integrations.whatsapp_stub import send_whatsapp
 
 

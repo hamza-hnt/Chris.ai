@@ -8,7 +8,7 @@ flowchart TB
     subgraph Channels
         WA[WhatsApp]
         EM[Email]
-        VOX[Voice]
+    VOX[SLNG Voice]
     end
 
     subgraph Supervisor

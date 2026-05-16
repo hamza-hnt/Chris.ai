@@ -11,7 +11,7 @@ The product has two layers:
   alerts, and human intervention hooks for the whole fleet.
 
 The first build focuses on the single-agent prompt system and a runnable project
-skeleton. WhatsApp, email, voice, and provider integrations are stubbed.
+skeleton. WhatsApp, email, SLNG voice, and provider integrations are stubbed.
 
 ```mermaid
 flowchart LR

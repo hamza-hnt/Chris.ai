@@ -1,10 +1,16 @@
 # Chris.AI Frontend
 
-Vite + React + TypeScript placeholder for the supervisor dashboard.
+Vite + React + TypeScript dashboard for landlord and supervisor operations.
 
-The first build focuses on the backend scaffold, agent prompt system, and prompt
-evaluation harness. This frontend exists so Docker Compose boots the complete
-development stack and exposes a first dashboard surface at:
+The current app reads the FastAPI supervisor dashboard endpoint and shows:
+
+- owner portfolio KPIs;
+- properties and assigned tenants;
+- tenant request progress;
+- owner decision flags;
+- plan steps, recent actions, and tool traces.
+
+Run it through Docker Compose and open:
 
 ```text
 http://localhost:5173

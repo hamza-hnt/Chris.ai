@@ -42,12 +42,14 @@ Services:
 
 - Backend API: http://localhost:8000
 - API health: http://localhost:8000/health
-- Frontend placeholder: http://localhost:5173
+- Frontend dashboard: http://localhost:5173
 - Adminer: http://localhost:8082
 
 ## What Is Implemented
 
 - Docker Compose stack for PostgreSQL, FastAPI, Vite, and Adminer.
+- Landlord dashboard showing properties, tenants, request progress, recent
+  actions, and agent traces.
 - Pydantic settings with fail-fast secret validation.
 - Alembic migration for the relational and JSONB-backed data model.
 - Context-injected Chris agent with provider abstraction and stubbed tools.

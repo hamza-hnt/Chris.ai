@@ -18,7 +18,7 @@ meaningful work.
 changes.
 
 `messaging.send(to_role, channel, body, attachments?)`: sends through stubbed
-WhatsApp, email, or voice integrations.
+WhatsApp, email, or SLNG voice integrations.
 
 `messaging.ask_question(to_role, body)`: asks exactly one question. The tool
 refuses bodies with zero or multiple question marks.
