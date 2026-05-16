@@ -13,7 +13,7 @@ dashboard endpoint. It shows:
 
 Demo accounts after `make seed`:
 
-- Landlord: `marc.landlord@example.com`
+- Landlord: `hamza.landlord@example.com`
 - Tenant: `amina.tenant@example.com`
 - Tenant: `hugo.tenant@example.com`
 

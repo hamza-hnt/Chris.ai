@@ -24,7 +24,7 @@ from app.domain.models import (
 
 DEMO_TENANT_PHONE = "+33600000001"
 DEMO_TENANT_2_PHONE = "+33600000004"
-DEMO_LANDLORD_PHONE = "+33600000002"
+DEMO_LANDLORD_PHONE = "+33783913305"
 
 
 def seed() -> None:
@@ -61,8 +61,8 @@ def seed() -> None:
             db,
             org.id,
             role=UserRole.landlord,
-            name="Marc Landlord",
-            email="marc.landlord@example.com",
+            name="Hamza",
+            email="hamza.landlord@example.com",
             phone=DEMO_LANDLORD_PHONE,
         )
         _user(

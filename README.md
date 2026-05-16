@@ -47,7 +47,7 @@ Services:
 
 Demo login accounts:
 
-- Landlord: `marc.landlord@example.com`
+- Landlord: `hamza.landlord@example.com`
 - Tenant: `amina.tenant@example.com`
 - Tenant: `hugo.tenant@example.com`
 
@@ -73,3 +73,4 @@ Demo login accounts:
 - [Evaluation Strategy](docs/08-evaluation-strategy.md)
 - [Local Development](docs/09-local-development.md)
 - [WhatsApp Cloud API Setup](docs/11-whatsapp-cloud-setup.md)
+- [Twilio WhatsApp Sandbox Setup](docs/12-twilio-sandbox-setup.md)

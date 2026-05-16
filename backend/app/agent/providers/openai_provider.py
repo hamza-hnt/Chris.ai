@@ -26,7 +26,10 @@ class OpenAIProvider(LLMProvider):
         )
         choice = response.choices[0].message
         tool_calls = [
-            LLMToolCall(name=call.function.name, arguments=_json_arguments(call.function.arguments))
+            LLMToolCall(
+                name=_from_openai_tool_name(call.function.name),
+                arguments=_json_arguments(call.function.arguments),
+            )
             for call in choice.tool_calls or []
         ][:tool_budget]
         return LLMResponse(content=choice.content, tool_calls=tool_calls)
@@ -36,11 +39,19 @@ def _to_openai_tool(schema: dict[str, Any]) -> dict[str, Any]:
     return {
         "type": "function",
         "function": {
-            "name": schema["name"],
+            "name": _to_openai_tool_name(schema["name"]),
             "description": schema["description"],
             "parameters": schema["parameters"],
         },
     }
+
+
+def _to_openai_tool_name(name: str) -> str:
+    return name.replace(".", "__")
+
+
+def _from_openai_tool_name(name: str) -> str:
+    return name.replace("__", ".")
 
 
 def _json_arguments(raw: str) -> dict[str, Any]:

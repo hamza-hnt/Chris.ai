@@ -25,7 +25,7 @@ make eval
 
 `make seed` rebuilds the demo portfolio with one landlord and two tenants:
 
-- Landlord: `marc.landlord@example.com`
+- Landlord: `hamza.landlord@example.com`
 - Tenant: `amina.tenant@example.com`
 - Tenant: `hugo.tenant@example.com`
 
@@ -36,6 +36,7 @@ make eval
 - Frontend: http://localhost:5173
 - Adminer: http://localhost:8082
 - WhatsApp webhook: http://localhost:8000/webhooks/whatsapp
+- Twilio WhatsApp webhook: http://localhost:8000/webhooks/twilio/whatsapp
 
 Adminer defaults:
 
@@ -58,3 +59,4 @@ Adminer defaults:
 - [Prompt Engineering](06-prompt-engineering.md)
 - [Tool Contracts](07-tool-contracts.md)
 - [WhatsApp Cloud API Setup](11-whatsapp-cloud-setup.md)
+- [Twilio WhatsApp Sandbox Setup](12-twilio-sandbox-setup.md)

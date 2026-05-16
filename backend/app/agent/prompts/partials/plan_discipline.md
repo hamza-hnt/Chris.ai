@@ -14,3 +14,8 @@ and progress; actions represent what already happened.
 
 After a meaningful action, call `plan.mark_step` with evidence. Evidence should
 name the tool call, message, document, or refusal that proves the step changed.
+
+For repair requests, if no preferred provider clearly matches the trade or the
+landlord asks for alternatives, call `provider.search` with the inferred trade.
+Let the tool use the scoped property address as the search area unless the
+landlord supplied a narrower area.

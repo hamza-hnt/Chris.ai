@@ -432,7 +432,7 @@ function LoginScreen({ onLogin }: { onLogin: (session: LoginResponse) => void })
             id="identifier"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            placeholder="marc.landlord@example.com"
+            placeholder="hamza.landlord@example.com"
           />
           {error ? <p className="form-error">{error}</p> : null}
           <button className="login-button" disabled={isLoading || !identifier.trim()}>

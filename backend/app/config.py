@@ -33,8 +33,11 @@ class Settings(BaseSettings):
         default="info", description="Application log level."
     )
     APP_AGENT_TOOL_BUDGET: int = Field(default=20, ge=1, le=100, description="Tool call cap.")
+    APP_AGENT_RUNTIME: Literal["deterministic", "llm"] = Field(
+        default="deterministic", description="Agent runtime policy."
+    )
 
-    WHATSAPP_MODE: Literal["stub", "cloud"] = Field(
+    WHATSAPP_MODE: Literal["stub", "cloud", "twilio"] = Field(
         default="stub", description="WhatsApp integration mode."
     )
     WHATSAPP_GRAPH_API_VERSION: str = Field(
@@ -55,6 +58,18 @@ class Settings(BaseSettings):
     WHATSAPP_APP_SECRET: SecretStr | None = Field(
         default=None, description="Meta app secret for X-Hub-Signature-256 validation."
     )
+    TWILIO_ACCOUNT_SID: str | None = Field(
+        default=None, description="Twilio account SID for WhatsApp Sandbox."
+    )
+    TWILIO_AUTH_TOKEN: SecretStr | None = Field(
+        default=None, description="Twilio auth token for REST API and webhook signatures."
+    )
+    TWILIO_WHATSAPP_FROM: str = Field(
+        default="whatsapp:+14155238886", description="Twilio WhatsApp Sandbox sender."
+    )
+    TWILIO_VALIDATE_SIGNATURE: bool = Field(
+        default=False, description="Validate X-Twilio-Signature on inbound webhooks."
+    )
 
     @model_validator(mode="after")
     def validate_required_secrets(self) -> "Settings":
@@ -74,6 +89,13 @@ class Settings(BaseSettings):
                 missing.append("WHATSAPP_VERIFY_TOKEN")
             if self.APP_ENV == "production" and not _secret_value(self.WHATSAPP_APP_SECRET):
                 missing.append("WHATSAPP_APP_SECRET")
+        if self.WHATSAPP_MODE == "twilio":
+            if not _plain_value(self.TWILIO_ACCOUNT_SID):
+                missing.append("TWILIO_ACCOUNT_SID")
+            if not _secret_value(self.TWILIO_AUTH_TOKEN):
+                missing.append("TWILIO_AUTH_TOKEN")
+            if not _plain_value(self.TWILIO_WHATSAPP_FROM):
+                missing.append("TWILIO_WHATSAPP_FROM")
         if missing:
             joined = ", ".join(missing)
             raise ValueError(f"Missing or empty required environment variable(s): {joined}")
@@ -96,6 +118,7 @@ class Settings(BaseSettings):
             "postgres_host": self.POSTGRES_HOST,
             "postgres_db": self.POSTGRES_DB,
             "agent_tool_budget": self.APP_AGENT_TOOL_BUDGET,
+            "agent_runtime": self.APP_AGENT_RUNTIME,
             "whatsapp_mode": self.WHATSAPP_MODE,
             "whatsapp_graph_api_version": self.WHATSAPP_GRAPH_API_VERSION,
         }

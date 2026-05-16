@@ -92,14 +92,19 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
     },
     {
         "name": "provider.search",
-        "description": "Search for outside providers using Tavily.",
+        "description": (
+            "Search Tavily for outside repair providers near the scoped property. "
+            "Use when no preferred provider fits, when the landlord asks for options, "
+            "or when the request needs an external contractor shortlist. The tool "
+            "uses the property address automatically if area is omitted."
+        ),
         "parameters": object_schema(
             {
                 "trade": {"type": "string"},
-                "area": {"type": "string"},
+                "area": {"type": ["string", "null"]},
                 "constraints": {"type": "string"},
             },
-            ["trade", "area"],
+            ["trade"],
         ),
     },
     {
