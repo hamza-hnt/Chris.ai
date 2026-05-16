@@ -12,6 +12,7 @@ def build_tool_executor() -> ToolExecutor:
             "messaging.ask_question": messaging.ask_question,
             "provider.list_preferred": provider_sourcing.list_preferred,
             "provider.search": provider_sourcing.search,
+            "provider.register_contact": provider_sourcing.register_contact,
             "provider.contact": provider_sourcing.contact,
             "documents.create_receipt": documents.receipt,
             "documents.create_intervention_report": documents.intervention_report,

@@ -96,7 +96,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "Search Tavily for outside repair providers near the scoped property. "
             "Use when no preferred provider fits, when the landlord asks for options, "
             "or when the request needs an external contractor shortlist. The tool "
-            "uses the property address automatically if area is omitted."
+            "uses the property address automatically if area is omitted and returns "
+            "contactable candidates with provider_id values when possible."
         ),
         "parameters": object_schema(
             {
@@ -108,8 +109,29 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "provider.register_contact",
+        "description": (
+            "Create or update an ad hoc repair provider supplied by the landlord. "
+            "Use this when the landlord gives a phone number or email for a "
+            "specific person to contact instead of Chris's preferred/Tavily options."
+        ),
+        "parameters": object_schema(
+            {
+                "name": {"type": ["string", "null"]},
+                "trade": {"type": "string"},
+                "phone": {"type": ["string", "null"]},
+                "email": {"type": ["string", "null"]},
+                "note": {"type": ["string", "null"]},
+            },
+            ["trade"],
+        ),
+    },
+    {
         "name": "provider.contact",
-        "description": "Open a provider thread with a scoped work brief.",
+        "description": (
+            "Contact a provider with a scoped repair brief and open a provider thread. "
+            "Requires landlord approval for repair coordination."
+        ),
         "parameters": object_schema(
             {"provider_id": {"type": "string"}, "brief": {"type": "string"}},
             ["provider_id", "brief"],

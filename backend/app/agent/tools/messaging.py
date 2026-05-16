@@ -1,7 +1,9 @@
-from sqlalchemy import select
+from uuid import UUID
+
+from sqlalchemy import desc, select
 
 from app.agent.tools.executor import ToolExecutionContext
-from app.domain.models import ConversationParty, Lease
+from app.domain.models import ActionLog, ConversationParty, Lease, Provider
 from app.domain.repositories.memory import append_action, append_message
 from app.integrations.email_stub import send_email
 from app.integrations.slng_stub import send_voice
@@ -60,7 +62,30 @@ def _resolve_role_phone(context: ToolExecutionContext, to_role: str) -> str | No
         return lease.tenant.phone
     if to_role == "landlord":
         return lease.landlord.phone
+    if to_role == "provider":
+        return _latest_provider_phone(context)
     return None
+
+
+def _latest_provider_phone(context: ToolExecutionContext) -> str | None:
+    action = (
+        context.db.execute(
+            select(ActionLog)
+            .where(ActionLog.property_id == context.property_id, ActionLog.kind == "provider.contact")
+            .order_by(desc(ActionLog.created_at))
+        )
+        .scalars()
+        .first()
+    )
+    if action is None:
+        return None
+    provider_id = (action.payload or {}).get("provider_id")
+    if not provider_id:
+        return None
+    provider = context.db.get(Provider, UUID(str(provider_id)))
+    if provider is None:
+        return None
+    return (provider.contacts or {}).get("phone")
 
 
 def ask_question(context: ToolExecutionContext, arguments: dict) -> dict:
